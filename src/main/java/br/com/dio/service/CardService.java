@@ -24,6 +24,7 @@ public class CardService {
 
     public CardEntity create(final CardEntity entity) throws SQLException {
         try {
+            entity.setAdded(java.time.OffsetDateTime.now());
             var dao = new CardDAO(connection);
             dao.insert(entity);
             connection.commit();

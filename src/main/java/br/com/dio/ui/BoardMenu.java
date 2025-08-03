@@ -11,6 +11,8 @@ import br.com.dio.service.CardService;
 import lombok.AllArgsConstructor;
 
 import java.sql.SQLException;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 import static br.com.dio.persistence.config.ConnectionConfig.getConnection;
@@ -19,6 +21,7 @@ import static br.com.dio.persistence.config.ConnectionConfig.getConnection;
 public class BoardMenu {
 
     private final Scanner scanner = new Scanner(System.in).useDelimiter("\n");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private final BoardEntity entity;
 
@@ -67,6 +70,7 @@ public class BoardMenu {
         card.setBoardColumn(entity.getInitialColumn());
         try(var connection = getConnection()){
             new CardService(connection).create(card);
+            System.out.println("Card criado com sucesso!");
         }
     }
 
@@ -78,6 +82,7 @@ public class BoardMenu {
                 .toList();
         try(var connection = getConnection()){
             new CardService(connection).moveToNextColumn(cardId, boardColumnsInfo);
+            System.out.println("Card movido com sucesso!");
         } catch (RuntimeException ex){
             System.out.println(ex.getMessage());
         }
@@ -119,6 +124,7 @@ public class BoardMenu {
                 .toList();
         try(var connection = getConnection()){
             new CardService(connection).cancel(cardId, cancelColumn.getId(), boardColumnsInfo);
+            System.out.printf("Card cancelado com sucesso! Timestamp: %s\n", java.time.OffsetDateTime.now());
         } catch (RuntimeException ex){
             System.out.println(ex.getMessage());
         }
@@ -148,8 +154,8 @@ public class BoardMenu {
             var column = new BoardColumnQueryService(connection).findById(selectedColumnId);
             column.ifPresent(co -> {
                 System.out.printf("Coluna %s tipo %s\n", co.getName(), co.getKind());
-                co.getCards().forEach(ca -> System.out.printf("Card %s - %s\nDescrição: %s",
-                        ca.getId(), ca.getTitle(), ca.getDescription()));
+                co.getCards().forEach(ca -> System.out.printf("Card %s - %s\nDescrição: %s\nAdicionado/Modificado: %s\n",
+                        ca.getId(), ca.getTitle(), ca.getDescription(), ca.getAdded() != null ? ca.getAdded().minusHours(3).format(formatter) : "N/A"));
             });
         }
     }
@@ -163,6 +169,7 @@ public class BoardMenu {
                             c -> {
                                 System.out.printf("Card %s - %s.\n", c.id(), c.title());
                                 System.out.printf("Descrição: %s\n", c.description());
+                                System.out.printf("Adicionado em: %s\n", c.added() != null ? c.added().minusHours(3).format(formatter) : "N/A");
                                 System.out.println(c.blocked() ?
                                         "Está bloqueado. Motivo: " + c.blockReason() :
                                         "Não está bloqueado");

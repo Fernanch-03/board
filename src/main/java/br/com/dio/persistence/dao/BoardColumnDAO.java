@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static br.com.dio.persistence.converter.OffsetDateTimeConverter.toOffsetDateTime;
 import static br.com.dio.persistence.entity.BoardColumnKindEnum.findByName;
 import static java.util.Objects.isNull;
 
@@ -93,7 +94,8 @@ public class BoardColumnDAO {
                bc.kind,
                c.id,
                c.title,
-               c.description
+               c.description,
+               c.added
           FROM BOARDS_COLUMNS bc
           LEFT JOIN CARDS c
             ON c.board_column_id = bc.id
@@ -115,6 +117,7 @@ public class BoardColumnDAO {
                     card.setId(resultSet.getLong("c.id"));
                     card.setTitle(resultSet.getString("c.title"));
                     card.setDescription(resultSet.getString("c.description"));
+                    card.setAdded(toOffsetDateTime(resultSet.getTimestamp("c.added")));
                     entity.getCards().add(card);
                 }while (resultSet.next());
                 return Optional.of(entity);
